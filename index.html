@@ -1,41 +1,64 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Convert HTML Form to JSON</title>
-<link rel="stylesheet" type="text/css" href="style.css">
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"> </script>
+  <meta charset="UTF-8">
+  <title>Save data to GitHub</title>
 </head>
-
 <body>
-<h1>Convert HTML Form to JSON</h1>
-<h5>Developed by Tadeh Alexani</h5>
-<form class="cf" onSubmit="return make_json(this);">
-  <input type="text" id="input-name" placeholder="Name" name="name">
-  <input type="email" id="input-email" placeholder="Email address" name="email">
-  <input type="text" id="input-subject" placeholder="Subject" name="subject">
-  <textarea name="msg" type="text" id="input-message" placeholder="Message"></textarea>
-  <input type="submit" value="Submit" id="input-submit">
+  <h1>Save data to GitHub</h1>
+
+<form id="myForm">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name"><br><br>
+  <label for="email">Email:</label>
+  <input type="email" id="email" name="email"><br><br>
+  <button type="submit">Save</button>
 </form>
-<pre id="output">
-	Created JSON will shown here..
-</pre>
+
 <script>
-	function make_json(form){
-		var json = {
-			"name": form.name.value,
-			"email": form.email.value,
-			"subject": form.subject.value,
-			"message": form.msg.value,
-		};
-	var html = JSON.stringify(json, 0,4);
-		
-	document.getElementById('output').innerHTML = html;
-	
-	$.post('data.php',{'json':html} );
-		
-	return false
-	}
-	</script>
+const form = document.getElementById('myForm');
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+
+  const data = { name, email };
+
+  const authToken = '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';
+  const owner = 'SoumenAtta';
+  const repo = 'web_tech_demo';
+  const path = 'data.json';
+
+  fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${authToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: 'Update data file',
+      content: btoa(JSON.stringify(data)),
+      sha: 'null'
+    })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('An error occurred while saving the data.');
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Data saved successfully:', data);
+    // You can add code here to show a success message to the user
+  })
+  .catch(error => {
+    console.error('Error saving data:', error);
+    // You can add code here to show an error message to the user
+  });
+});
+</script>
+
 </body>
 </html>
