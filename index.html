@@ -1,92 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Save data to GitHub</title>
+<meta charset="utf-8">
+<title>Convert HTML Form to JSON</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"> </script>
 </head>
+
 <body>
-  <h1>Save data to GitHub</h1>
-
-  <form id="myForm">
-    <label for="date">Date:</label>
-    <input type="date" id="date" name="date" required>
-
-    <label for="apple">Apple:</label>
-    <input type="number" id="apple" name="apple" min="0" max="10" required>
-
-    <label for="orange">Orange:</label>
-    <input type="number" id="orange" name="orange" min="0" max="10" required>
-
-    <button type="button" id="addRow">Add Row</button>
-    <button type="button" id="saveData">Save Data</button>
-  </form>
-
-  <script>
-    // Define the URL of the GitHub repository and the path to the data file
-    const repoUrl = "https://api.github.com/repos/https://soumenatta/web_tech_demo";
-    const filePath = "data.json";
-
-    // Add an event listener to the Add Row button
-    document.getElementById("addRow").addEventListener("click", function() {
-      const table = document.getElementById("dataTable");
-      const newRow = table.insertRow(-1);
-      const dateCell = newRow.insertCell(0);
-      const appleCell = newRow.insertCell(1);
-      const orangeCell = newRow.insertCell(2);
-      dateCell.innerHTML = `<input type="date" name="date" required>`;
-      appleCell.innerHTML = `<input type="number" name="apple" min="0" max="10" required>`;
-      orangeCell.innerHTML = `<input type="number" name="orange" min="0" max="10" required>`;
-    });
-
-    // Add an event listener to the Save Data button
-    document.getElementById("saveData").addEventListener("click", function() {
-      // Get the form data and convert it to an array of objects
-      const form = document.getElementById("myForm");
-      const data = new FormData(form);
-      const entries = [];
-      for (const pair of data.entries()) {
-        const obj = {};
-        obj[pair[0]] = pair[1];
-        entries.push(obj);
-      }
-      const jsonData = { entries: entries };
-
-      // Send the JSON data to GitHub using the Fetch API
-      const url = `${repoUrl}/contents/${filePath}`;
-      fetch(url, {
-        method: "GET",
-        headers: {
-          "Accept": "application/vnd.github.v3+json"
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        const sha = data.sha;
-        const content = btoa(JSON.stringify(jsonData, null, 2));
-        const message = "Update data.json";
-        const body = { message: message, content: content, sha: sha };
-        return fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": "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"
-          },
-          body: JSON.stringify(body)
-        });
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("HTTP error " + response.status);
-        }
-        alert("Data saved successfully!");
-      })
-      .catch(error => {
-        console.error("Error saving data:", error);
-        alert("An error occurred while saving the data. Please try again later.");
-});
-});
-</script>
-
+<h1>Convert HTML Form to JSON</h1>
+<h5>Developed by Tadeh Alexani</h5>
+<form class="cf" onSubmit="return make_json(this);">
+  <input type="text" id="input-name" placeholder="Name" name="name">
+  <input type="email" id="input-email" placeholder="Email address" name="email">
+  <input type="text" id="input-subject" placeholder="Subject" name="subject">
+  <textarea name="msg" type="text" id="input-message" placeholder="Message"></textarea>
+  <input type="submit" value="Submit" id="input-submit">
+</form>
+<pre id="output">
+	Created JSON will shown here..
+</pre>
+<script>
+	function make_json(form){
+		var json = {
+			"name": form.name.value,
+			"email": form.email.value,
+			"subject": form.subject.value,
+			"message": form.msg.value,
+		};
+	var html = JSON.stringify(json, 0,4);
+		
+	document.getElementById('output').innerHTML = html;
+	
+	$.post('data.php',{'json':html} );
+		
+	return false
+	}
+	</script>
 </body>
 </html>
