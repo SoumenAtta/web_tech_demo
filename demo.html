@@ -1,83 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>My Form</title>
-	<style>
-		table {
-			border-collapse: collapse;
-		}
-		th, td {
-			border: 1px solid black;
-			padding: 5px;
-			text-align: center;
-		}
-	</style>
+  <meta charset="UTF-8">
+  <title>Save data to GitHub</title>
 </head>
 <body>
-	<h1>My Form</h1>
-	<form>
-		<table>
-			<thead>
-				<tr>
-					<th>Date</th>
-					<th>Apple</th>
-					<th>Orange</th>
-				</tr>
-			</thead>
-			<tbody id="table-body">
-				<tr>
-					<td><input type="date" name="date" /></td>
-					<td><input type="number" name="apple" min="0" /></td>
-					<td><input type="number" name="orange" min="0" max="10" /></td>
-				</tr>
-			</tbody>
-		</table>
-		<button type="button" onclick="addRow()">Add Row</button>
-		<button type="button" onclick="saveData()">Save Data</button>
-	</form>
-	<script>
-		let data = [];
+  <h1>Save data to GitHub</h1>
 
-		function addRow() {
-			let tableBody = document.getElementById("table-body");
-			let newRow = document.createElement("tr");
-			newRow.innerHTML = `
-				<td><input type="date" name="date" /></td>
-				<td><input type="number" name="apple" min="0" /></td>
-				<td><input type="number" name="orange" min="0" max="10" /></td>
-			`;
-			tableBody.appendChild(newRow);
-		}
+  <form id="myForm">
+    <label for="date">Date:</label>
+    <input type="date" id="date" name="date" required>
 
-		function saveData() {
-			let tableRows = document.querySelectorAll("#table-body tr");
-			data = [];
-			tableRows.forEach(row => {
-				let rowData = {
-					date: row.querySelector("input[name='date']").value,
-					apple: row.querySelector("input[name='apple']").value,
-					orange: row.querySelector("input[name='orange']").value
-				};
-				data.push(rowData);
-			});
-			let jsonData = { entries: data };
+    <label for="apple">Apple:</label>
+    <input type="number" id="apple" name="apple" min="0" max="10" required>
 
-			fetch('https://soumenatta.github.io/web_tech_demo/data.json', {
-			  method: 'POST',
-			  body: JSON.stringify(jsonData)
-			})
-			.then(response => {
-			  if (response.ok) {
-			    console.log('Data saved successfully');
-			  } else {
-			    console.error('Error saving data:', response.statusText);
-			  }
-			})
-			.catch(error => {
-			  console.error('Error saving data:', error);
-			});
-		}
-	</script>
+    <label for="orange">Orange:</label>
+    <input type="number" id="orange" name="orange" min="0" max="10" required>
+
+    <button type="button" id="addRow">Add Row</button>
+    <button type="button" id="saveData">Save Data</button>
+  </form>
+
+  <script>
+    // Define the URL of the GitHub repository and the path to the data file
+    const repoUrl = "https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO";
+    const filePath = "data.json";
+
+    // Add an event listener to the Add Row button
+    document.getElementById("addRow").addEventListener("click", function() {
+      const table = document.getElementById("dataTable");
+      const newRow = table.insertRow(-1);
+      const dateCell = newRow.insertCell(0);
+      const appleCell = newRow.insertCell(1);
+      const orangeCell = newRow.insertCell(2);
+      dateCell.innerHTML = `<input type="date" name="date" required>`;
+      appleCell.innerHTML = `<input type="number" name="apple" min="0" max="10" required>`;
+      orangeCell.innerHTML = `<input type="number" name="orange" min="0" max="10" required>`;
+    });
+
+    // Add an event listener to the Save Data button
+    document.getElementById("saveData").addEventListener("click", function() {
+      // Get the form data and convert it to an array of objects
+      const form = document.getElementById("myForm");
+      const data = new FormData(form);
+      const entries = [];
+      for (const pair of data.entries()) {
+        const obj = {};
+        obj[pair[0]] = pair[1];
+        entries.push(obj);
+      }
+      const jsonData = { entries: entries };
+
+      // Send the JSON data to GitHub using the Fetch API
+      const url = `${repoUrl}/contents/${filePath}`;
+      fetch(url, {
+        method: "GET",
+        headers: {
+          "Accept": "application/vnd.github.v3+json"
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        const sha = data.sha;
+        const content = btoa(JSON.stringify(jsonData, null, 2));
+        const message = "Update data.json";
+        const body = { message: message, content: content, sha: sha };
+        return fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer YOUR_GITHUB_TOKEN"
+          },
+          body: JSON.stringify(body)
+        });
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+        alert("Data saved successfully!");
+      })
+      .catch(error => {
+        console.error("Error saving data:", error);
+        alert("An error occurred while saving the data. Please try again later.");
+});
+});
+</script>
+
 </body>
 </html>
-
